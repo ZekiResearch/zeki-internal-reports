@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Coverage Analysis</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --amber: #d97706;
+    --amber-bg: #fef3c7;
+    --blue: #2563eb;
+    --blue-bg: #dbeafe;
+    --radius: 10px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 32px;
+    min-height: 100vh;
+  }
+
+  .header { margin-bottom: 28px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .header p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .metric-card .label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 8px;
+  }
+  .metric-card .value {
+    font-size: 32px; font-weight: 700; color: var(--text-primary);
+    line-height: 1; margin-bottom: 4px;
+  }
+  .metric-card .sub { font-size: 12px; color: var(--text-secondary); }
+  .metric-card.green .value { color: var(--green); }
+  .metric-card.red   .value { color: var(--red); }
+  .metric-card.amber .value { color: var(--amber); }
+
+  .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .section-subtitle { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .legend-row { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .badge.green  { background: var(--green-bg);  color: var(--green); }
+  .badge.red    { background: var(--red-bg);    color: var(--red); }
+  .badge.amber  { background: var(--amber-bg);  color: var(--amber); }
+
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: #f8fafc; border-bottom: 1px solid var(--border); }
+  thead th {
+    padding: 10px 16px; text-align: left;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f8fafc; }
+  tbody td { padding: 10px 16px; color: var(--text-primary); vertical-align: middle; }
+  td.muted { color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Company Coverage Analysis</h1>
+  <p>Athena employee count vs LinkedIn reported range — LDT API coverage check</p>
+</div>
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="label">Total Companies</div>
+    <div class="value">41</div>
+    <div class="sub">Across all lists</div>
+  </div>
+  <div class="metric-card green">
+    <div class="label">Within Range</div>
+    <div class="value" id="cnt-within">—</div>
+    <div class="sub">Athena count matches LI range</div>
+  </div>
+  <div class="metric-card amber">
+    <div class="label">Almost in Range</div>
+    <div class="value" id="cnt-almost">—</div>
+    <div class="sub">Within 20% of band boundary</div>
+  </div>
+  <div class="metric-card red">
+    <div class="label">Outside Range</div>
+    <div class="value" id="cnt-outside">—</div>
+    <div class="sub">More than 20% from band</div>
+  </div>
+</div>
+
+<div class="section-title">Company Detail</div>
+<div class="section-subtitle">Athena count compared against LinkedIn reported employee range — 20% tolerance applied for "Almost in Range"</div>
+
+<div class="legend-row">
+  <div class="legend-item"><span class="badge green">Within Range</span> Athena falls inside the LI band</div>
+  <div class="legend-item"><span class="badge amber">Almost in Range</span> Within 20% of band boundary</div>
+  <div class="legend-item"><span class="badge red">Outside Range</span> More than 20% away — likely low LDT API coverage</div>
+</div>
+
+<div class="section-card">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Company</th>
+        <th>LI Employee Range</th>
+        <th>Athena Count</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<script>
+const companies = [
+  { name: "Rocket Companies",       li: "10K+",    min: 10000, max: null,  athena: 1156  },
+  { name: "Dave",                   li: "201–500", min: 201,   max: 500,   athena: 161   },
+  { name: "Constellation Software", li: "10K+",    min: 10000, max: null,  athena: 183   },
+  { name: "CoStar",                 li: "1K–5K",   min: 1000,  max: 5000,  athena: 54    },
+  { name: "Clear Secure",           li: "1K–5K",   min: 1000,  max: 5000,  athena: 720   },
+  { name: "AppLovin",               li: "501–1K",  min: 501,   max: 1000,  athena: 429   },
+  { name: "Oscar Health",           li: "1K–5K",   min: 1000,  max: 5000,  athena: 1337  },
+  { name: "Chime",                  li: "1K–5K",   min: 1000,  max: 5000,  athena: 1318  },
+  { name: "Xometry",                li: "1K–5K",   min: 1000,  max: 5000,  athena: 609   },
+  { name: "Zeta Global",            li: "1K–5K",   min: 1000,  max: 5000,  athena: 1348  },
+  { name: "QXO",                    li: "5K–10K",  min: 5000,  max: 10000, athena: 1523  },
+  { name: "Circle Internet",        li: "1K–5K",   min: 1000,  max: 5000,  athena: 868   },
+  { name: "Upstart Financial",      li: "1K–5K",   min: 1000,  max: 5000,  athena: 1117  },
+  { name: "ServiceTitan",           li: "1K–5K",   min: 1000,  max: 5000,  athena: 2249  },
+  { name: "Navan",                  li: "1K–5K",   min: 1000,  max: 5000,  athena: 1661  },
+  { name: "Zillow",                 li: "5K–10K",  min: 5000,  max: 10000, athena: 4281  },
+  { name: "SOFI",                   li: "1K–5K",   min: 1000,  max: 5000,  athena: 2762  },
+  { name: "Robinhood",              li: "1K–5K",   min: 1000,  max: 5000,  athena: 2128  },
+  { name: "Klaviyo",                li: "1K–5K",   min: 1000,  max: 5000,  athena: 1966  },
+  { name: "Spotify",                li: "5K–10K",  min: 5000,  max: 10000, athena: 6447  },
+  { name: "Axon",                   li: "1K–5K",   min: 1000,  max: 5000,  athena: 2720  },
+  { name: "Duolingo",               li: "501–1K",  min: 501,   max: 1000,  athena: 1139  },
+  { name: "Hinge Health",           li: "1K–5K",   min: 1000,  max: 5000,  athena: 1144  },
+  { name: "Appfolio",               li: "1K–5K",   min: 1000,  max: 5000,  athena: 1315  },
+  { name: "Guidewire",              li: "1K–5K",   min: 1000,  max: 5000,  athena: 2051  },
+  { name: "Bentley Systems",        li: "5K–10K",  min: 5000,  max: 10000, athena: 2265  },
+  { name: "Trade Desk",             li: "1K–5K",   min: 1000,  max: 5000,  athena: 2879  },
+  { name: "Samsara",                li: "1K–5K",   min: 1000,  max: 5000,  athena: 3178  },
+  { name: "Cloudflare",             li: "1K–5K",   min: 1000,  max: 5000,  athena: 3596  },
+  { name: "Tyler Technologies",     li: "5K–10K",  min: 5000,  max: 10000, athena: 4270  },
+  { name: "Veeva",                  li: "5K–10K",  min: 5000,  max: 10000, athena: 4873  },
+  { name: "Toast",                  li: "1K–5K",   min: 1000,  max: 5000,  athena: 5125  },
+  { name: "Datadog",                li: "1K–5K",   min: 1000,  max: 5000,  athena: 6334  },
+  { name: "Crowdstrike",            li: "5K–10K",  min: 5000,  max: 10000, athena: 6520  },
+  { name: "Shopify",                li: "10K+",    min: 10000, max: null,  athena: 7679  },
+  { name: "Synopsys",               li: "10K+",    min: 10000, max: null,  athena: 8036  },
+  { name: "Autodesk",               li: "10K+",    min: 10000, max: null,  athena: 12269 },
+  { name: "Netflix",                li: "10K+",    min: 10000, max: null,  athena: 14459 },
+  { name: "Doordash",               li: "10K+",    min: 10000, max: null,  athena: 14972 },
+  { name: "ServiceNow",             li: "10K+",    min: 10000, max: null,  athena: 18630 },
+  { name: "Uber",                   li: "10K+",    min: 10000, max: null,  athena: 24744 },
+];
+
+function getStatus(min, max, athena) {
+  const t = 0.20;
+  if (max === null) {
+    if (athena >= min) return "within";
+    if (athena >= min * (1 - t)) return "almost";
+    return "outside";
+  }
+  if (athena >= min && athena <= max) return "within";
+  if (athena < min  && athena >= min * (1 - t)) return "almost";
+  if (athena > max  && athena <= max * (1 + t)) return "almost";
+  return "outside";
+}
+
+const tbody = document.getElementById("table-body");
+let cntWithin = 0, cntAlmost = 0, cntOutside = 0;
+
+companies.forEach((c, i) => {
+  const status = getStatus(c.min, c.max, c.athena);
+  if (status === "within")  cntWithin++;
+  if (status === "almost")  cntAlmost++;
+  if (status === "outside") cntOutside++;
+
+  const badgeClass = status === "within" ? "green" : status === "almost" ? "amber" : "red";
+  const badgeText  = status === "within" ? "Within Range" : status === "almost" ? "Almost in Range" : "Outside Range";
+
+  tbody.innerHTML += `
+    <tr>
+      <td class="muted">${i + 1}</td>
+      <td><strong>${c.name}</strong></td>
+      <td class="muted">${c.li}</td>
+      <td>${c.athena.toLocaleString()}</td>
+      <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+    </tr>`;
+});
+
+document.getElementById("cnt-within").textContent  = cntWithin;
+document.getElementById("cnt-almost").textContent  = cntAlmost;
+document.getElementById("cnt-outside").textContent = cntOutside;
+</script>
+</body>
+</html>
